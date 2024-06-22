@@ -1,0 +1,23 @@
+{
+  word: blurb, 
+  saved_on: 2024-06-18 21:01:55, 
+  phonetics: [{text: /blɝ(ː)b/, audio: }], 
+  thesaurus: {synonyms: [], antonyms: []}, 
+  meanings: 
+  {
+    noun: [{definition: A short description of a book, film, or other work, written and used for promotional purposes., usage: }], 
+    verb: [{definition: To write or quote in a blurb., usage: }, {definition: To supply with a blurb., usage: }]
+  }
+}
+
+
+{
+  word: blurb, 
+  phonetics: [{text: /blɝ(ː)b/, audio: }], 
+  thesaurus: {synonyms: [], antonyms: []},
+  meanings: 
+  {
+    noun: [{definition: A short description of a book, film, or other work, written and used for promotional purposes., usage: }], 
+    verb: [{definition: To write or quote in a blurb., usage: }, {definition: To supply with a blurb., usage: }]
+  }
+}

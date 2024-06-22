@@ -1,0 +1,8 @@
+- continuity of card index while swiping different parts of speech (done)
+- haptic feedback to buttons
+- exception handling for audio player
+- adjust button press splash size
+- select word to search in blurb
+- google search if not found
+- add new word
+- export/import to csv
