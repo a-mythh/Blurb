@@ -1,7 +1,10 @@
 import 'dart:collection';
 import 'package:blurb/utility/database.dart';
+import 'package:blurb/widgets/snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class BottomButtons extends StatefulWidget {
   final String word;
@@ -34,16 +37,44 @@ class _BottomButtonsState extends State<BottomButtons> {
       audioPlayed = true;
     });
 
-    DateTime start = DateTime.now();
-    await audioPlayer.play(UrlSource(url));
-    DateTime end = DateTime.now();
-    await Future.delayed(
-      Duration(milliseconds: end.difference(start).inMilliseconds + 400),
-    );
+    try {
+      DateTime start = DateTime.now();
+      final playFuture = audioPlayer.play(UrlSource(url));
+      DateTime end = DateTime.now();
+      final holdDuration =
+          Duration(milliseconds: end.difference(start).inMilliseconds + 1000);
+      await Future.delayed(holdDuration);
 
-    setState(() {
-      audioPlayed = false;
-    });
+      // timeout for low bandwidth
+      await playFuture.timeout(
+        Duration(
+          seconds: 7,
+          milliseconds: holdDuration.inMilliseconds,
+        ),
+        onTimeout: () {
+          if (context.mounted) {
+            showFlushBar(
+              context: context,
+              message: 'Uh oh! Unable to play the pronunciation.',
+              type: MessageType.failure,
+            );
+          }
+        },
+      );
+    } on Exception catch (error) {
+      debugPrint('Error playing audio: $error');
+      if (context.mounted) {
+        showFlushBar(
+          context: context,
+          message: 'Uh oh! We were not able to play the pronunciation.',
+          type: MessageType.failure,
+        );
+      }
+    } finally {
+      setState(() {
+        audioPlayed = false;
+      });
+    }
   }
 
   @override
@@ -69,7 +100,10 @@ class _BottomButtonsState extends State<BottomButtons> {
       children: [
         (widget.pronunciation.isNotEmpty
             ? IconButton(
-                onPressed: () => playPronunciation(widget.pronunciation),
+                onPressed: () {
+                  HapticFeedback.selectionClick();
+                  playPronunciation(widget.pronunciation);
+                },
                 icon: !audioPlayed
                     ? const Icon(
                         Icons.volume_up_outlined,
@@ -98,12 +132,14 @@ class _BottomButtonsState extends State<BottomButtons> {
                   setState(() {
                     isSaved = false;
                   });
+                  HapticFeedback.mediumImpact();
                 }
               : () {
                   widget.onSaveWord();
                   setState(() {
                     isSaved = true;
                   });
+                  HapticFeedback.mediumImpact();
                 },
           icon: isSaved
               ? const Icon(
@@ -116,6 +152,17 @@ class _BottomButtonsState extends State<BottomButtons> {
                 ),
         ),
       ],
-    );
+    ).animate(effects: [
+      const ScaleEffect(
+        begin: Offset(-1, 0),
+        duration: Duration(milliseconds: 600),
+        curve: Curves.fastEaseInToSlowEaseOut,
+        delay: Duration(milliseconds: 100),
+      ),
+      const FadeEffect(
+        duration: Duration(milliseconds: 600),
+        curve: Curves.easeInOut,
+      )
+    ]);
   }
 }

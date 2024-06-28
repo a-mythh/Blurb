@@ -53,7 +53,7 @@ Map word = {
   }
 };
 
-void main() {
+void main() async {
   // Initialize the database
   // final db = DictionaryDatabase.instance;
 
@@ -66,7 +66,11 @@ void main() {
   //     synonyms: word['thesaurus']['synonyms'],
   //     antonyms: word['thesaurus']['antonyms']);
 
-  DictionaryDatabase.instance
-      .findWord(wordName: 'like')
-      .then((value) => print(value));
+  List<Map<String, dynamic>> wordsList = await DictionaryDatabase.instance
+      .getAllWords(sortType: WordSortType.alphabeticalAZ);
+  print(wordsList);
+
+  // DictionaryDatabase.instance
+  //     .findWord(wordName: 'like')
+  //     .then((value) => print(value));
 }

@@ -15,9 +15,15 @@ class TitleAndPhoneticsSection extends StatelessWidget {
       children: [
         FittedBox(
           fit: BoxFit.contain,
-          child: Text(
-            word.toLowerCase(),
-            style: Theme.of(context).textTheme.headlineLarge,
+          child: Hero(
+            tag: word,
+            child: Material(
+              type: MaterialType.transparency,
+              child: Text(
+                word.toLowerCase(),
+                style: Theme.of(context).textTheme.headlineLarge,
+              ),
+            ),
           ),
         ),
         const SizedBox(height: 6),

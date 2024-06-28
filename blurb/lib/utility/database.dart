@@ -1,6 +1,15 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
+enum WordSortType {
+  mostRecent,
+  leastRecent,
+  alphabeticalAZ,
+  alphabeticalZA,
+  longestFirst,
+  shortestFirst,
+}
+
 class DictionaryDatabase {
   static final DictionaryDatabase instance = DictionaryDatabase._init();
   static Database? _database;
@@ -101,11 +110,11 @@ class DictionaryDatabase {
 
       await db.transaction((txn) async {
         wordId = await txn.insert(wordsTable, {
-          'word': word,
+          'word': word.toLowerCase(),
           'phonetics': phonetics,
           'audio': audio,
-          'synonyms': synonyms,
-          'antonyms': antonyms,
+          'synonyms': synonyms.toLowerCase(),
+          'antonyms': antonyms.toLowerCase(),
         });
 
         final insertedRow = await txn.query(
@@ -181,10 +190,12 @@ class DictionaryDatabase {
       if (words.isNotEmpty) {
         wordData['word'] = words.first['word'];
         wordData['saved_on'] = words.first['created_at'];
-        wordData['phonetics'] = [{
-          'text': words.first['phonetics'],
-          'audio': words.first['audio'],
-        }];
+        wordData['phonetics'] = [
+          {
+            'text': words.first['phonetics'],
+            'audio': words.first['audio'],
+          }
+        ];
         wordData['thesaurus'] = {
           'synonyms': words.first['synonyms'].toString().split(', '),
           'antonyms': words.first['antonyms'].toString().split(', '),
@@ -247,14 +258,25 @@ class DictionaryDatabase {
   }
 
   /* GET ALL WORDS */
-  Future<List<Map<String, dynamic>>> getAllWords() async {
+  Future<List<Map<String, dynamic>>> getAllWords(
+      {WordSortType sortType = WordSortType.mostRecent}) async {
     final db = await instance.database;
     List<Map<String, dynamic>> allWords = [];
+
+    Map orderingType = {
+      WordSortType.mostRecent: 'created_at DESC',
+      WordSortType.leastRecent: 'created_at ASC',
+      WordSortType.alphabeticalAZ: 'word ASC',
+      WordSortType.alphabeticalZA: 'word DESC',
+      WordSortType.longestFirst: 'length(word) DESC, word ASC',
+      WordSortType.shortestFirst: 'length(word) ASC, word ASC',
+    };
 
     try {
       allWords = await db.query(
         'words',
         columns: ['word_id', 'word', 'created_at'],
+        orderBy: orderingType[sortType],
       );
     } catch (e) {
       print('Exception: $e');
