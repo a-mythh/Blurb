@@ -1,8 +1,12 @@
 // packages
+import 'dart:collection';
 import 'dart:math';
+import 'package:another_flushbar/flushbar.dart';
+import 'package:blurb/widgets/snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
+import 'package:intl/intl.dart';
 
 // utility
 import 'package:blurb/utility/database.dart';
@@ -92,11 +96,28 @@ class MeaningScreen extends StatefulWidget {
   State<MeaningScreen> createState() => _MeaningScreenState();
 }
 
+String formatDate(String date) {
+  DateTime parsedDate = DateFormat('yyyy-MM-dd HH:mm:ss').parse(date);
+  String formattedDate = DateFormat('dd / MMMM / yyyy').format(
+    parsedDate.add(
+      const Duration(
+        hours: 5,
+        minutes: 30,
+      ),
+    ),
+  );
+
+  return formattedDate;
+}
+
 class _MeaningScreenState extends State<MeaningScreen> {
   // state variables
   int activePartOfSpeechIndex = 0;
   List meaningCards = [];
   Map<String, int> lastSwipedIndex = {};
+  bool isSaved = false;
+  String date = "";
+  bool isDeleted = false;
 
   // controllers
   final CardSwiperController swiperController = CardSwiperController();
@@ -105,7 +126,23 @@ class _MeaningScreenState extends State<MeaningScreen> {
 
   @override
   void initState() {
-    super.initState();
+    DictionaryDatabase.instance.getAllWords().then(
+      (value) {
+        setState(() {
+          HashMap savedWords = HashMap.fromIterable(
+            value,
+            key: (element) => element['word'],
+            value: (element) => element['created_at'],
+          );
+          isSaved = savedWords.containsKey(widget.wordData['word']);
+
+          if (isSaved) {
+            date = savedWords[widget.wordData['word']];
+          }
+        });
+      },
+    );
+
     _wordData = widget.wordData;
     List<String> pos = _wordData['meanings'].keys.toList();
 
@@ -115,6 +152,7 @@ class _MeaningScreenState extends State<MeaningScreen> {
       activePartOfSpeechIndex,
       pos,
     );
+    super.initState();
   }
 
   @override
@@ -172,6 +210,7 @@ class _MeaningScreenState extends State<MeaningScreen> {
           (index) => MeaningCard(
                 meaning: meanings[index]['definition'],
                 usage: meanings[index]['usage'],
+                currentWord: _wordData['word'],
               ));
     });
   }
@@ -193,19 +232,53 @@ class _MeaningScreenState extends State<MeaningScreen> {
       synonyms: synonyms,
       antonyms: antonyms,
     )
-        .catchError((error) {
-      throw Exception('Error: $error');
-    });
+        .onError(
+      (error, stackTrace) {
+        debugPrint('Word Save Error: $error');
+        showFlushBar(
+          context: context,
+          message: 'There was an error while saving the word.',
+          type: MessageType.failure,
+        );
+        return {};
+      },
+    );
+
+    isDeleted = false;
+
+    showFlushBar(
+      context: context,
+      message: 'Added to your saved words.',
+      type: MessageType.normal,
+      position: FlushbarPosition.TOP,
+      duration: const Duration(seconds: 1),
+    );
   }
 
   void unSaveWord() {
     String word = _wordData['word'];
 
-    DictionaryDatabase.instance.deleteWord(word: word).then((value) {
-      print('Word unsaved');
-    }).catchError((error) {
-      print('Error: $error');
-    });
+    DictionaryDatabase.instance.deleteWord(word: word).onError(
+      (error, stackTrace) {
+        debugPrint('Error while un-saving word: $error');
+        showFlushBar(
+          context: context,
+          message: 'There was an error while removing the word.',
+          type: MessageType.failure,
+        );
+        return false;
+      },
+    );
+
+    isDeleted = true;
+
+    showFlushBar(
+      context: context,
+      message: 'Removed from saved words.',
+      type: MessageType.normal,
+      position: FlushbarPosition.TOP,
+      duration: const Duration(seconds: 1),
+    );
   }
 
   @override
@@ -230,6 +303,27 @@ class _MeaningScreenState extends State<MeaningScreen> {
     List<String> antonyms = _wordData['thesaurus']['antonyms'];
 
     return Scaffold(
+      floatingActionButton: isSaved
+          ? Align(
+              alignment: const Alignment(1, -0.8),
+              child: WillPopScope(
+                onWillPop: () async {
+                  Navigator.pop(context, isDeleted);
+                  return true;
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(6),
+                    color: Theme.of(context).colorScheme.tertiary,
+                  ),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+                  margin: const EdgeInsets.symmetric(vertical: 6),
+                  child: Text(formatDate(date)),
+                ),
+              ),
+            )
+          : const SizedBox.shrink(),
       body: Container(
         margin: const EdgeInsets.all(30),
         width: double.infinity,
@@ -239,41 +333,61 @@ class _MeaningScreenState extends State<MeaningScreen> {
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
               // buttons
-              SizedBox(
-                height: 200,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    // Thesaurus buttons
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        (synonyms.isNotEmpty
-                            ? ThesaurusButton(
-                                thesaurusType: 'Synonyms',
-                                thesaurus: synonyms,
-                              )
-                            : const SizedBox.shrink()),
-                        (antonyms.isNotEmpty
-                            ? ThesaurusButton(
-                                thesaurusType: 'Antonyms',
-                                thesaurus: antonyms,
-                              )
-                            : const SizedBox.shrink()),
-                      ],
-                    ),
-                    const SizedBox(height: 40),
+              GestureDetector(
+                onHorizontalDragEnd: (details) {
+                  // left swipe
+                  if (details.velocity.pixelsPerSecond.dx < 8) {
+                    if (activePartOfSpeechIndex < partsOfSpeech.length - 1) {
+                      changePartOfSpeech(
+                          activePartOfSpeechIndex + 1, partsOfSpeech);
+                    }
+                  }
+                  // right swipe
+                  else {
+                    if (activePartOfSpeechIndex != 0) {
+                      changePartOfSpeech(
+                          activePartOfSpeechIndex - 1, partsOfSpeech);
+                    }
+                  }
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                      border: Border.all(color: Colors.transparent)),
+                  height: 200,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      // Thesaurus buttons
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          (synonyms.isNotEmpty
+                              ? ThesaurusButton(
+                                  thesaurusType: 'Synonyms',
+                                  thesaurus: synonyms,
+                                )
+                              : const SizedBox.shrink()),
+                          (antonyms.isNotEmpty
+                              ? ThesaurusButton(
+                                  thesaurusType: 'Antonyms',
+                                  thesaurus: antonyms,
+                                )
+                              : const SizedBox.shrink()),
+                        ],
+                      ),
+                      const SizedBox(height: 40),
 
-                    // Pronunciation and Bookmark buttons
-                    BottomButtons(
-                      word: word,
-                      pronunciation: pronunciation,
-                      onSaveWord: () => saveWord(),
-                      onUnSaveWord: () => unSaveWord(),
-                    ),
+                      // Pronunciation and Bookmark buttons
+                      BottomButtons(
+                        word: word,
+                        pronunciation: pronunciation,
+                        onSaveWord: () => saveWord(),
+                        onUnSaveWord: () => unSaveWord(),
+                      ),
 
-                    const SizedBox(height: 30),
-                  ],
+                      const SizedBox(height: 30),
+                    ],
+                  ),
                 ),
               ),
 
@@ -314,23 +428,28 @@ class _MeaningScreenState extends State<MeaningScreen> {
                                 ).animate(
                                     effects: index == activePartOfSpeechIndex
                                         ? [
-                                            const FlipEffect(
+                                            const ScaleEffect(
+                                              // begin: Offset(0.5, -1),
                                               curve: Curves.easeInOut,
-                                              duration: Duration(
-                                                milliseconds: 500,
-                                              ),
-                                              alignment: Alignment.centerLeft,
+                                              duration:
+                                                  Duration(milliseconds: 200),
+                                              // alignment: Alignment.centerLeft,
                                             ),
                                             const FadeEffect(
                                               curve: Curves.easeInOut,
-                                              duration: Duration(
-                                                milliseconds: 400,
-                                              ),
+                                              duration:
+                                                  Duration(milliseconds: 600),
                                             ),
                                           ]
                                         : []),
                               ),
-                            ),
+                            ).animate(effects: [
+                              const SlideEffect(
+                                begin: Offset(1, 0),
+                                duration: Duration(milliseconds: 600),
+                                curve: Curves.fastEaseInToSlowEaseOut,
+                              )
+                            ]),
                           ),
 
                           const SizedBox(height: 36),

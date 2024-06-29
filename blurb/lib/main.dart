@@ -1,7 +1,11 @@
 // libraries
+import 'dart:async';
+
+import 'package:blurb/screens/introduction.dart';
 import 'package:blurb/screens/splash.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 
 // screens
@@ -43,6 +47,7 @@ final theme = ThemeData().copyWith(
     titleMedium: breeSerif(),
     titleSmall: breeSerif(),
     bodyMedium: breeSerif(),
+    headlineSmall: breeSerif(),
     labelLarge: GoogleFonts.notoSerif(),
   ),
 );
@@ -70,11 +75,18 @@ class HelperWidget extends StatefulWidget {
 
 class _HelperWidgetState extends State<HelperWidget> {
   late Future<Database> database;
+  late bool seenIntro;
+
+  void hasSeenIntroduction() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    seenIntro = pref.getBool('seenIntro') ?? false;
+  }
 
   @override
   void initState() {
     super.initState();
     database = DictionaryDatabase.instance.database;
+    hasSeenIntroduction();
   }
 
   @override
@@ -91,8 +103,8 @@ class _HelperWidgetState extends State<HelperWidget> {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const SplashScreen();
         }
-          return const SearchScreen();
-        
+
+        return seenIntro ? const SearchScreen() : const IntroScreen();
       },
     );
   }

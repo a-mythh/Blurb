@@ -1,5 +1,6 @@
 import 'package:blurb/utility/database.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 
 class Dictionary {
   late Dio dio;
@@ -72,28 +73,27 @@ class Dictionary {
     try {
       Map result = {};
       result = await DictionaryDatabase.instance.findWord(wordName: word);
-
+      
+      // find word in local database
       if (result.isNotEmpty) {
-        print(result);
         return result;
       }
 
+      // find word through api
       Response res = await dio.get('/entries/en/$word');
       List data = res.data;
       List phonetics = data[0]['phonetics'];
       List meanings = data[0]['meanings'];
-
 
       result['word'] = word;
       result['phonetics'] = getPhoneticsAndAudio(phonetics);
       result['meanings'] = getMeanings(meanings);
       result['thesaurus'] = getThesaurus(meanings);
 
-      print(result);
-
       return result;
     } on DioException catch (e) {
-      throw Exception('Failed to load: $e');
+      debugPrint('Failed to load: $e');
+      return {};
     }
   }
 }

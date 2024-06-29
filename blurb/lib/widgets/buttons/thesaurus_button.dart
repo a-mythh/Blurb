@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class ThesaurusButton extends StatefulWidget {
   final String thesaurusType;
@@ -63,11 +64,14 @@ class _ThesaurusButtonState extends State<ThesaurusButton> {
     final borderColor = Theme.of(context).colorScheme.onSecondary;
 
     return GestureDetector(
-      onTapDown: (details) => setState(
-        () {
-          _borderWidth = 2;
-        },
-      ),
+      onTapDown: (details) {
+        setState(
+          () {
+            _borderWidth = 2;
+          },
+        );
+        HapticFeedback.selectionClick();
+      },
       onTapUp: (details) async {
         setState(() {
           _borderWidth = 6;

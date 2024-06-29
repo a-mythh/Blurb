@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class PartOfSpeechButton extends StatelessWidget {
   final String partOfSpeech;
@@ -28,7 +29,10 @@ class PartOfSpeechButton extends StatelessWidget {
               : Theme.of(context).colorScheme.primary,
         ),
       ),
-      onPressed: onPressed,
+      onPressed: () {
+        HapticFeedback.lightImpact();
+        onPressed();
+      },
       child: Text(
         partOfSpeech.toLowerCase(),
         style: Theme.of(context).textTheme.titleLarge!.copyWith(

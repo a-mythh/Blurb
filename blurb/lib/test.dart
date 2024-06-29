@@ -11,8 +11,8 @@ void main() async {
     DateTime end = DateTime.now();
 
     print(end.difference(start).inMilliseconds);
-    print(result['thesaurus']['synonyms']);
-    
+    print(result);
+
     exit(0);
   } catch (e) {
     print('Error: $e');
