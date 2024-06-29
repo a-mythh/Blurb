@@ -63,7 +63,7 @@ class MeaningCard extends StatelessWidget {
       return;
     }
 
-    if (currentWord == word) {
+    if (currentWord.toLowerCase() == word.toLowerCase()) {
       showFlushBar(
         context: context,
         message: 'No, no. Don\'t do that.',

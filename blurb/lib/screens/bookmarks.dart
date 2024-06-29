@@ -557,13 +557,37 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
                     )
               : const SizedBox.shrink(),
         ],
-        title: Text(
-          'Saved Words',
-          style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.onPrimary,
-              ),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Saved Words',
+              style: Theme.of(context).textTheme.headlineMedium!.copyWith(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
+            ),
+            words.isNotEmpty
+                ? const SizedBox(width: 6)
+                : const SizedBox.shrink(),
+            words.isNotEmpty
+                ? Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(6),
+                      color: Theme.of(context).colorScheme.tertiary,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 0,
+                    ),
+                    child: Text(
+                      '${words.length}',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ],
         ),
         centerTitle: true,
       ),
