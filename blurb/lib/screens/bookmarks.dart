@@ -41,7 +41,9 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
   bool isDownloadingFile = false;
   WordSortType selectedSort = WordSortType.mostRecent;
   bool downloadFileFormatted = false;
+  bool isDeleted = false;
 
+  // all the words in the database
   List<Map> words = [];
 
   void getWords({
@@ -51,6 +53,8 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
     setState(() {
       isLoadingWords = true;
     });
+
+    // fetch words from the database
     await DictionaryDatabase.instance
         .getAllWords(sortType: sortType)
         .then((result) {
@@ -60,9 +64,9 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
     });
 
     // show loading
-    // if (showDelay) {
-    //   await Future.delayed(const Duration(milliseconds: 400));
-    // }
+    if (showDelay) {
+      await Future.delayed(const Duration(milliseconds: 50));
+    }
 
     setState(() {
       isLoadingWords = false;
@@ -95,29 +99,57 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
       context: context,
       message: 'Removed from saved words.',
       type: MessageType.normal,
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 1000),
     );
   }
 
-  void goToMeaning(String word) async {
-    setState(() {
-      isLoadingMeaning = true;
-    });
-
-    Map wordData = await DictionaryDatabase.instance.findWord(wordName: word);
-    await Future.delayed(const Duration(milliseconds: 400));
+  void goToMeaning(Map word, int index) async {
+    Map wordData =
+        await DictionaryDatabase.instance.findWord(wordName: word['word']);
 
     if (mounted) {
       await Navigator.of(context)
-          .push(MaterialPageRoute(
-            builder: (context) => MeaningScreen(wordData: wordData),
-          ))
-          .then((value) => getWords(sortType: selectedSort));
-    }
+          .push(
+        PageRouteBuilder(
+          transitionDuration: const Duration(milliseconds: 500),
+          reverseTransitionDuration: const Duration(milliseconds: 500),
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              MeaningScreen(wordData: wordData),
+          transitionsBuilder: (
+            BuildContext context,
+            Animation<double> animation,
+            Animation<double> secondaryAnimation,
+            Widget child,
+          ) {
+            const beginOffset = Offset(1, 0);
+            const endOffset = Offset(0, 0);
 
-    setState(() {
-      isLoadingMeaning = false;
-    });
+            final slideAnimation = Tween<Offset>(
+              begin: beginOffset,
+              end: endOffset,
+            ).animate(animation);
+
+            return SlideTransition(
+              position: slideAnimation,
+              child: child,
+            );
+          },
+        ),
+      )
+          .then(
+        (value) {
+          if (value == true) {
+            setState(() {
+              words = words.toList()..removeAt(index);
+              _listKey.currentState!.removeItem(
+                index,
+                (context, animation) => buildItem(word, index, animation),
+              );
+            });
+          }
+        },
+      );
+    }
   }
 
   void showSortSelectionDialogBox(BuildContext context) {
@@ -130,53 +162,68 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
       WordSortType.shortestFirst: "Shortest first",
     };
 
-    showDialog(
+    showGeneralDialog(
         context: context,
-        builder: (context) {
-          return StatefulBuilder(
-            builder: (context, setState) => SimpleDialog(
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              surfaceTintColor: Colors.transparent,
-              title: Text(
-                'Sort by',
-                style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                      color: Theme.of(context).colorScheme.onPrimary,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                textAlign: TextAlign.center,
-              ),
-              children: sortType.keys
-                  .map((type) => RadioListTile(
-                        activeColor: Theme.of(context).colorScheme.primary,
-                        selectedTileColor:
-                            Theme.of(context).colorScheme.onPrimary,
-                        title: Text(
-                          sortType[type]!,
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium!
-                              .copyWith(
-                                fontSize: 18,
-                                color: type == selectedSort
-                                    ? Theme.of(context).colorScheme.primary
-                                    : Theme.of(context).colorScheme.onPrimary,
-                              ),
+        barrierLabel: '',
+        barrierDismissible: true,
+        transitionDuration: const Duration(milliseconds: 150),
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return const SizedBox.shrink();
+        },
+        transitionBuilder: (context, animation, secondaryAnimation, child) {
+          return ScaleTransition(
+            scale: animation,
+            alignment: const Alignment(0.85, 0.9),
+            child: FadeTransition(
+              opacity: animation,
+              child: StatefulBuilder(
+                builder: (context, setState) => SimpleDialog(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  surfaceTintColor: Colors.transparent,
+                  title: Text(
+                    'Sort by',
+                    style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
                         ),
-                        value: type,
-                        selected: type == selectedSort,
-                        groupValue: selectedSort,
-                        onChanged: (value) {
-                          setState(() {
-                            selectedSort = value!;
-                          });
-                          getWords(
-                            sortType: selectedSort,
-                            showDelay: true,
-                          );
-                        },
-                      ))
-                  .toList(),
+                    textAlign: TextAlign.center,
+                  ),
+                  children: sortType.keys
+                      .map((type) => RadioListTile(
+                            activeColor: Theme.of(context).colorScheme.primary,
+                            selectedTileColor:
+                                Theme.of(context).colorScheme.onPrimary,
+                            title: Text(
+                              sortType[type]!,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium!
+                                  .copyWith(
+                                    fontSize: 18,
+                                    color: type == selectedSort
+                                        ? Theme.of(context).colorScheme.primary
+                                        : Theme.of(context)
+                                            .colorScheme
+                                            .onPrimary,
+                                  ),
+                            ),
+                            value: type,
+                            selected: type == selectedSort,
+                            groupValue: selectedSort,
+                            onChanged: (value) {
+                              setState(() {
+                                selectedSort = value!;
+                              });
+                              getWords(
+                                sortType: selectedSort,
+                                showDelay: true,
+                              );
+                            },
+                          ))
+                      .toList(),
+                ),
+              ),
             ),
           );
         });
@@ -185,121 +232,135 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
   Future<bool> showDownloadDialogBox(BuildContext context) async {
     var completer = Completer<bool>();
 
-    showDialog(
+    showGeneralDialog(
       context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) => SimpleDialog(
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            surfaceTintColor: Colors.transparent,
-            title: Text(
-              'Download Excel Format',
-              style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                    color: Theme.of(context).colorScheme.onPrimary,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-            children: [
-              RadioListTile(
-                activeColor: Theme.of(context).colorScheme.primary,
-                selectedTileColor: Theme.of(context).colorScheme.onPrimary,
+      barrierLabel: '',
+      barrierDismissible: true,
+      transitionDuration: const Duration(milliseconds: 250),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return const SizedBox.shrink();
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return ScaleTransition(
+          scale: animation,
+          alignment: const Alignment(0.9, -0.9),
+          child: FadeTransition(
+            opacity: animation,
+            child: StatefulBuilder(
+              builder: (context, setState) => SimpleDialog(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                surfaceTintColor: Colors.transparent,
                 title: Text(
-                  'Bland',
-                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                  'Download Excel Format',
+                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                        color: Theme.of(context).colorScheme.onPrimary,
                         fontSize: 18,
-                        color: downloadFileFormatted == false
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.onPrimary,
+                        fontWeight: FontWeight.bold,
                       ),
-                ),
-                value: false,
-                selected: downloadFileFormatted == false,
-                groupValue: downloadFileFormatted,
-                onChanged: (value) {
-                  setState(() {
-                    downloadFileFormatted = value!;
-                  });
-                },
-              ),
-              RadioListTile(
-                activeColor: Theme.of(context).colorScheme.primary,
-                selectedTileColor: Theme.of(context).colorScheme.onPrimary,
-                title: Text(
-                  'Unicorn Vomit',
-                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                        fontSize: 18,
-                        color: downloadFileFormatted == true
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.onPrimary,
-                      ),
-                ),
-                value: true,
-                selected: downloadFileFormatted == true,
-                groupValue: downloadFileFormatted,
-                onChanged: (value) {
-                  setState(() {
-                    downloadFileFormatted = value!;
-                  });
-                },
-              ),
-
-              // Note
-              const SizedBox(height: 20),
-              Container(
-                width: 50,
-                margin: const EdgeInsets.symmetric(horizontal: 10),
-                child: RichText(
                   textAlign: TextAlign.center,
-                  text: TextSpan(
-                    style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                          fontStyle: FontStyle.italic,
-                        ),
-                    children: const [
-                      TextSpan(text: 'File will be saved in a folder named '),
-                      TextSpan(
-                        text: 'blurb',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      TextSpan(text: ' in Internal Storage.'),
-                    ],
-                  ),
                 ),
-              ),
-
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      completer.complete(false);
+                  RadioListTile(
+                    activeColor: Theme.of(context).colorScheme.primary,
+                    selectedTileColor: Theme.of(context).colorScheme.onPrimary,
+                    title: Text(
+                      'Bland',
+                      style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                            fontSize: 18,
+                            color: downloadFileFormatted == false
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.onPrimary,
+                          ),
+                    ),
+                    value: false,
+                    selected: downloadFileFormatted == false,
+                    groupValue: downloadFileFormatted,
+                    onChanged: (value) {
+                      setState(() {
+                        downloadFileFormatted = value!;
+                      });
                     },
-                    child: Text(
-                      'Cancel',
-                      style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                  RadioListTile(
+                    activeColor: Theme.of(context).colorScheme.primary,
+                    selectedTileColor: Theme.of(context).colorScheme.onPrimary,
+                    title: Text(
+                      'Unicorn Vomit',
+                      style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                            fontSize: 18,
+                            color: downloadFileFormatted == true
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.onPrimary,
+                          ),
+                    ),
+                    value: true,
+                    selected: downloadFileFormatted == true,
+                    groupValue: downloadFileFormatted,
+                    onChanged: (value) {
+                      setState(() {
+                        downloadFileFormatted = value!;
+                      });
+                    },
+                  ),
+
+                  // Note
+                  const SizedBox(height: 20),
+                  Container(
+                    width: 50,
+                    margin: const EdgeInsets.symmetric(horizontal: 10),
+                    child: RichText(
+                      textAlign: TextAlign.center,
+                      text: TextSpan(
+                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                              fontStyle: FontStyle.italic,
+                            ),
+                        children: const [
+                          TextSpan(
+                              text: 'File will be saved in a folder named '),
+                          TextSpan(
+                            text: 'blurb',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(text: ' in Internal Storage.'),
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  TextButton(
-                    onPressed: () {
-                      HapticFeedback.selectionClick();
-                      Navigator.of(context).pop();
-                      completer.complete(true);
-                    },
-                    child: Text(
-                      'Download',
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyLarge!
-                          .copyWith(fontWeight: FontWeight.bold),
-                    ),
-                  ),
+
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          completer.complete(false);
+                        },
+                        child: Text(
+                          'Cancel',
+                          style: Theme.of(context).textTheme.bodyLarge,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      TextButton(
+                        onPressed: () {
+                          HapticFeedback.selectionClick();
+                          Navigator.of(context).pop();
+                          completer.complete(true);
+                        },
+                        child: Text(
+                          'Download',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyLarge!
+                              .copyWith(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  )
                 ],
-              )
-            ],
+              ),
+            ),
           ),
         );
       },
@@ -368,17 +429,25 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
         child: ListTile(
           onTap: () {
             HapticFeedback.selectionClick();
-            goToMeaning(word['word']);
+            goToMeaning(word, index);
           },
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 20,
             vertical: 6,
           ),
-          title: Text(word['word']),
-          titleTextStyle: Theme.of(context).textTheme.titleLarge!.copyWith(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+          title: Hero(
+            tag: word['word'],
+            child: Material(
+              type: MaterialType.transparency,
+              child: Text(
+                word['word'],
+                style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
+            ),
+          ),
           subtitle: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -412,7 +481,18 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
           ),
           titleAlignment: ListTileTitleAlignment.center,
         ),
-      ),
+      ).animate(effects: [
+        const SlideEffect(
+          duration: Duration(milliseconds: 700),
+          delay: Duration(milliseconds: 100),
+          begin: Offset(1, 0),
+          curve: Curves.fastEaseInToSlowEaseOut,
+        ),
+        const FadeEffect(
+          duration: Duration(microseconds: 500),
+          curve: Curves.easeInOut,
+        ),
+      ]),
     );
   }
 

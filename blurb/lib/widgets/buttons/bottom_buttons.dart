@@ -141,15 +141,29 @@ class _BottomButtonsState extends State<BottomButtons> {
                   });
                   HapticFeedback.mediumImpact();
                 },
-          icon: isSaved
-              ? const Icon(
-                  Icons.bookmark_rounded,
-                  size: 40,
-                )
-              : const Icon(
-                  Icons.bookmark_outline_outlined,
-                  size: 40,
+          icon: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 250),
+            transitionBuilder: (child, animation) {
+              return FadeTransition(
+                opacity: animation,
+                child: ScaleTransition(
+                  scale: animation,
+                  child: child,
                 ),
+              );
+            },
+            child: isSaved
+                ? const Icon(
+                    Icons.bookmark_rounded,
+                    key: ValueKey<bool>(true),
+                    size: 40,
+                  )
+                : const Icon(
+                    Icons.bookmark_outline_outlined,
+                    key: ValueKey<bool>(false),
+                    size: 40,
+                  ),
+          ),
         ),
       ],
     ).animate(effects: [

@@ -11,3 +11,10 @@ Done:
 Never-mind:
 - add new word
 - google search if not found
+
+
+- hero to title
+- animate container of list items (slide and fade)
+- apply effect to fab
+- remove unnecessary loading
+- hopefully everything works

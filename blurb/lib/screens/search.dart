@@ -86,8 +86,18 @@ class _SearchScreenState extends State<SearchScreen> {
 
     if (mounted) {
       await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => MeaningScreen(wordData: result),
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              MeaningScreen(wordData: result),
+          transitionDuration: const Duration(milliseconds: 300),
+          reverseTransitionDuration: const Duration(milliseconds: 400),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return ScaleTransition(
+              scale: animation,
+              alignment: const Alignment(0, 0.3),
+              child: child,
+            );
+          },
         ),
       );
     }
@@ -117,8 +127,19 @@ class _SearchScreenState extends State<SearchScreen> {
           onPressed: () {
             HapticFeedback.mediumImpact();
             Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => const BookmarksScreen(),
+              PageRouteBuilder(
+                transitionDuration: const Duration(milliseconds: 350),
+                reverseTransitionDuration: const Duration(milliseconds: 350),
+                pageBuilder: (context, animation, secondaryAnimation) =>
+                    const BookmarksScreen(),
+                transitionsBuilder:
+                    (context, animation, secondaryAnimation, child) {
+                  return ScaleTransition(
+                    scale: animation,
+                    alignment: const Alignment(0.7, 0.8),
+                    child: child,
+                  );
+                },
               ),
             );
           },

@@ -117,6 +117,7 @@ class _MeaningScreenState extends State<MeaningScreen> {
   Map<String, int> lastSwipedIndex = {};
   bool isSaved = false;
   String date = "";
+  bool isDeleted = false;
 
   // controllers
   final CardSwiperController swiperController = CardSwiperController();
@@ -243,6 +244,8 @@ class _MeaningScreenState extends State<MeaningScreen> {
       },
     );
 
+    isDeleted = false;
+
     showFlushBar(
       context: context,
       message: 'Added to your saved words.',
@@ -266,7 +269,9 @@ class _MeaningScreenState extends State<MeaningScreen> {
         return false;
       },
     );
-    
+
+    isDeleted = true;
+
     showFlushBar(
       context: context,
       message: 'Removed from saved words.',
@@ -301,14 +306,21 @@ class _MeaningScreenState extends State<MeaningScreen> {
       floatingActionButton: isSaved
           ? Align(
               alignment: const Alignment(1, -0.8),
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(6),
-                  color: Theme.of(context).colorScheme.tertiary,
+              child: WillPopScope(
+                onWillPop: () async {
+                  Navigator.pop(context, isDeleted);
+                  return true;
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(6),
+                    color: Theme.of(context).colorScheme.tertiary,
+                  ),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+                  margin: const EdgeInsets.symmetric(vertical: 6),
+                  child: Text(formatDate(date)),
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
-                margin: const EdgeInsets.symmetric(vertical: 6),
-                child: Text(formatDate(date)),
               ),
             )
           : const SizedBox.shrink(),
@@ -431,7 +443,13 @@ class _MeaningScreenState extends State<MeaningScreen> {
                                           ]
                                         : []),
                               ),
-                            ),
+                            ).animate(effects: [
+                              const SlideEffect(
+                                begin: Offset(1, 0),
+                                duration: Duration(milliseconds: 600),
+                                curve: Curves.fastEaseInToSlowEaseOut,
+                              )
+                            ]),
                           ),
 
                           const SizedBox(height: 36),

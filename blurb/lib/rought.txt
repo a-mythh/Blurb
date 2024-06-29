@@ -1,0 +1,17 @@
+.animate(
+                                    effects: index == activePartOfSpeechIndex
+                                        ? [
+                                            const ScaleEffect(
+                                              // begin: Offset(0.5, -1),
+                                              curve: Curves.easeInOut,
+                                              duration:
+                                                  Duration(milliseconds: 200),
+                                              // alignment: Alignment.centerLeft,
+                                            ),
+                                            const FadeEffect(
+                                              curve: Curves.easeInOut,
+                                              duration:
+                                                  Duration(milliseconds: 600),
+                                            ),
+                                          ]
+                                        : []),

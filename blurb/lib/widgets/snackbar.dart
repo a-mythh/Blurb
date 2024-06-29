@@ -63,6 +63,7 @@ void showFlushBar({
         : const EdgeInsets.only(bottom: 30),
     backgroundColor: colour[type]![0],
     duration: duration,
+    animationDuration: const Duration(milliseconds: 400),
     flushbarPosition: position,
     flushbarStyle: FlushbarStyle.FLOATING,
     borderRadius: BorderRadius.circular(14),
