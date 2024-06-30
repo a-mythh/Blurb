@@ -112,7 +112,6 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   void initState() {
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.initState();
   }
 
