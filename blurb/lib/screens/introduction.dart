@@ -16,11 +16,8 @@ class _IntroScreenState extends State<IntroScreen> {
   late Timer timer;
   int index = 0;
 
-  @override
-  void initState() {
-    super.initState();
-    // SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
-    timer = Timer.periodic(const Duration(seconds: 6), (timer) async {
+  void runAnimations() {
+    timer = Timer.periodic(const Duration(seconds: 5), (timer) async {
       if (index < 10) {
         setState(() {
           index++;
@@ -57,18 +54,25 @@ class _IntroScreenState extends State<IntroScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    runAnimations();
+  }
+
+  @override
   void dispose() {
     super.dispose();
-    // SystemChrome.setEnabledSystemUIMode(
-    //   SystemUiMode.manual,
-    //   overlays: SystemUiOverlay.values,
-    // );
     timer.cancel();
   }
 
   @override
   Widget build(BuildContext context) {
-    TextStyle fontStyle = Theme.of(context).textTheme.headlineSmall!;
+    TextStyle fontStyle = TextStyle(
+      fontSize: 24,
+      fontFamily: 'Comics Sans',
+      color: Theme.of(context).colorScheme.onPrimary,
+    );
     List<Widget> widgets = [
       Text(
         'Hey there!',
@@ -222,7 +226,8 @@ class _IntroScreenState extends State<IntroScreen> {
                   reverseDuration: const Duration(milliseconds: 100),
                   transitionBuilder: (child, animation) {
                     return FadeTransition(
-                      opacity: Tween<double>(begin: 0, end: 1).animate(animation),
+                      opacity:
+                          Tween<double>(begin: 0, end: 1).animate(animation),
                       child: child,
                     );
                   },
