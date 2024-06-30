@@ -56,7 +56,6 @@ class _IntroScreenState extends State<IntroScreen> {
   @override
   void initState() {
     super.initState();
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     runAnimations();
   }
 
@@ -69,8 +68,8 @@ class _IntroScreenState extends State<IntroScreen> {
   @override
   Widget build(BuildContext context) {
     TextStyle fontStyle = TextStyle(
+      fontFamily: 'Comic Sans',
       fontSize: 24,
-      fontFamily: 'Comics Sans',
       color: Theme.of(context).colorScheme.onPrimary,
     );
     List<Widget> widgets = [
@@ -124,11 +123,11 @@ class _IntroScreenState extends State<IntroScreen> {
             ),
             child: Text(
               '1',
-              style: Theme.of(context).textTheme.displaySmall!.copyWith(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+              style: fontStyle.copyWith(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
           ),
           const SizedBox(height: 20),
@@ -153,11 +152,11 @@ class _IntroScreenState extends State<IntroScreen> {
             ),
             child: Text(
               '2',
-              style: Theme.of(context).textTheme.displaySmall!.copyWith(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+              style: fontStyle.copyWith(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
           ),
           const SizedBox(height: 20),
@@ -182,11 +181,11 @@ class _IntroScreenState extends State<IntroScreen> {
             ),
             child: Text(
               '3',
-              style: Theme.of(context).textTheme.displaySmall!.copyWith(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+              style: fontStyle.copyWith(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
           ),
           const SizedBox(height: 20),
