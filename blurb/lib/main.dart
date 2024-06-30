@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:blurb/screens/introduction.dart';
 import 'package:blurb/screens/splash.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
@@ -17,6 +18,11 @@ import 'package:blurb/utility/database.dart';
 void main() {
   // Ensure that Flutter binding is initialized
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+    ),
+  );
 
   runApp(const App());
 }
@@ -52,17 +58,44 @@ final theme = ThemeData().copyWith(
   ),
 );
 
-class App extends StatelessWidget {
+class App extends StatefulWidget {
   const App({super.key});
+
+  @override
+  State<App> createState() => _AppState();
+}
+
+class _AppState extends State<App> {
+  late Future<Database> database;
+
+  @override
+  void initState() {
+    super.initState();
+    database = DictionaryDatabase.instance.database;
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    database.then((db) => db.close());
+  }
 
   @override
   Widget build(context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'blurb.',
-      theme: theme,
-      home: const HelperWidget(),
-    );
+        debugShowCheckedModeBanner: false,
+        title: 'blurb.',
+        theme: theme,
+        home: FutureBuilder(
+          future: database,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const SplashScreen();
+            }
+
+            return const HelperWidget();
+          },
+        ));
   }
 }
 
@@ -74,37 +107,34 @@ class HelperWidget extends StatefulWidget {
 }
 
 class _HelperWidgetState extends State<HelperWidget> {
-  late Future<Database> database;
-  late bool seenIntro;
-
-  void hasSeenIntroduction() async {
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    seenIntro = pref.getBool('seenIntro') ?? false;
-  }
+  late Future<bool> seenIntro;
 
   @override
   void initState() {
     super.initState();
-    database = DictionaryDatabase.instance.database;
-    hasSeenIntroduction();
+    seenIntro = hasSeenIntroduction();
   }
 
   @override
   void dispose() {
     super.dispose();
-    database.then((db) => db.close());
+  }
+
+  Future<bool> hasSeenIntroduction() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    return pref.getBool('seenIntro') ?? false;
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: database,
+    return FutureBuilder<bool>(
+      future: seenIntro,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const SplashScreen();
         }
-
-        return seenIntro ? const SearchScreen() : const IntroScreen();
+        final bool introSeen = snapshot.data ?? false;
+        return introSeen ? const SearchScreen() : const IntroScreen();
       },
     );
   }
