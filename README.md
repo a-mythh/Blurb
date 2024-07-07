@@ -5,7 +5,7 @@ Welcome to blurb! This is a sleek and efficient dictionary application built usi
 ## Features
 
 - **Fast and Simple UI**: The user interface is designed to be intuitive and responsive, ensuring a seamless experience.
-- **Elegant Design**: Clean aesthetics and thoughtful design choices make for a visually appealing app.
+- **Elegant Design**: Clean aesthetics and thoughtful design choices make for a visually appealing app (swipe-able flashcards for meanings).
 - **Smooth Animations**: Subtle animations are integrated to enhance user experience, making interactions fluid and enjoyable.
 - **Comprehensive Word Lookup**: Leveraging the free dictionary API, this app provides detailed definitions, pronunciations, and example usages.
 - **Local Word Storage**: Users can save words locally in a database and access them offline.
