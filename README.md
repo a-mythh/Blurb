@@ -8,6 +8,8 @@ Welcome to blurb! This is a sleek and efficient dictionary application built usi
 - **Elegant Design**: Clean aesthetics and thoughtful design choices make for a visually appealing app.
 - **Smooth Animations**: Subtle animations are integrated to enhance user experience, making interactions fluid and enjoyable.
 - **Comprehensive Word Lookup**: Leveraging the free dictionary API, this app provides detailed definitions, pronunciations, and example usages.
+- **Local Word Storage**: Users can save words locally in a database and access them offline.
+- **Autocomplete Functionality**: A simple backend built with Node.js and MongoDB provides autocomplete suggestions.
 
 ## Screenshots
 
@@ -21,8 +23,8 @@ Welcome to blurb! This is a sleek and efficient dictionary application built usi
 
 1. **Clone the Repository**:
     ```bash
-    git clone https://github.com/yourusername/dictionary-app.git
-    cd dictionary-app
+    git clone https://github.com/a-mythh/Blurb.git
+    cd Blurb
     ```
 
 2. **Install Dependencies**:
@@ -39,7 +41,7 @@ Welcome to blurb! This is a sleek and efficient dictionary application built usi
 
 1. Open the app.
 2. Type the word you want to look up in the search bar.
-3. View the definition, pronunciation, and example usages.
+3. View the definition, pronunciation, example usages and thesaurus.
 
 ## API
 
