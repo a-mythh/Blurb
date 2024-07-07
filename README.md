@@ -13,11 +13,11 @@ Welcome to blurb! This is a sleek and efficient dictionary application built usi
 
 ## Screenshots
 <p align="center">
-  <img src="/assets/snapshots/search.png" alt="Search" width="30%">
+  <img src="/snapshots/search.png" alt="Search" width="30%">
   <span style="display:inline-block; width:30px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
   <img src="/assets/snapshots/definition.png" alt="Definition" width="30%">
   <span style="display:inline-block; width:10px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-  <img src="/assets/snapshots/saved_words.png" alt="Saved Words" width="30%">
+  <img src="/snapshots/saved_words.png" alt="Saved Words" width="30%">
 </p>
 
 ## Android
